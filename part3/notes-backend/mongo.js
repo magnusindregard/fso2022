@@ -1,3 +1,4 @@
+require('dotenv').config()
 const mongoose = require('mongoose')
 
 if (process.argv.length < 3) {
@@ -7,7 +8,7 @@ if (process.argv.length < 3) {
 
 const password = process.argv[2]
 
-const url = `mongodb+srv://magnusindregard:${password}@cluster0.nypth0n.mongodb.net/noteApp?retryWrites=true&w=majority`
+const url = process.env.MONGODB_URI
 
 const noteSchema = new mongoose.Schema({
   content: String,

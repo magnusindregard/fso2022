@@ -51,7 +51,7 @@ const App = () => {
             }, 3000)
           })
           .catch(error => {
-            setNotification({message: `The contact you are trying to change has been deleted`, type: "error"})
+            setNotification({message: error.response.data.error, type: "error"})
             setTimeout(() => {
               setNotification({message: null, type: "success"})
             }, 3000)
@@ -72,6 +72,13 @@ const App = () => {
             setTimeout(() => {
               setNotification({message: null, type: "success"})
             }, 3000)
+        })
+        .catch(error => {
+          console.log(error.response.data.error)
+          setNotification({message: error.response.data.error, type: "error"})
+          setTimeout(() => {
+            setNotification({message: null, type: "success"})
+          }, 6000)
         })
     }
   }

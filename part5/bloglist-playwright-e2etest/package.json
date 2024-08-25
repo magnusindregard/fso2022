@@ -1,0 +1,27 @@
+{
+  "name": "bloglist-playwright-e2etest",
+  "version": "1.0.0",
+  "description": "End to end test for Blog app and backend",
+  "main": "index.js",
+  "scripts": {
+    "test": "playwright test",
+    "test:report": "playwright show-report"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/magnusindregard/fso2022.git"
+  },
+  "keywords": [
+    "fso"
+  ],
+  "author": "Magnus Indregard",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/magnusindregard/fso2022/issues"
+  },
+  "homepage": "https://github.com/magnusindregard/fso2022#readme",
+  "devDependencies": {
+    "@playwright/test": "^1.46.1",
+    "@types/node": "^22.4.1"
+  }
+}

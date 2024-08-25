@@ -56,17 +56,20 @@ const initialUsers = [
   {
       "username": "magnus",
       "name": "Magnus Indregard",
-      "blogs": []
+      "blogs": [],
+      "passwordHash": ""
   },
   {
       "blogs": [],
       "username": "sigrid",
-      "name": "Sigrid Indregard"
+      "name": "Sigrid Indregard",
+      "passwordHash": ""
   },
   {
       "blogs": [],
       "username": "annemarthe",
-      "name": "Anne-Marthe Indregard"
+      "name": "Anne-Marthe Indregard",
+      "passwordHash": ""
   }
 ]
 

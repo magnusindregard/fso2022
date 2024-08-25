@@ -1,10 +1,13 @@
 const mongoose = require('mongoose')
 const supertest = require('supertest')
 const helper = require('./test_helper')
-const app = require('../app')
-const api = supertest(app)
 const Blog = require('../models/blog')
 const User = require('../models/user')
+const bcrypt = require('bcrypt')
+const app = require('../app')
+const api = supertest(app)
+
+let token
 
 beforeEach(async () => {
     
@@ -13,16 +16,19 @@ beforeEach(async () => {
     await User.deleteMany({})
 
     for (let user of helper.initialUsers) {
+        const saltRounds = 10
+        const passwordHash = await bcrypt.hash("password", saltRounds)
         let newUser = new User(user)
+        newUser.passwordHash = passwordHash
         let savedUser = await newUser.save()
         listOfUsers = listOfUsers.concat(savedUser._id.toString())
-        console.log(listOfUsers)
     }
     
     await Blog.deleteMany({})
     
     for (let blog of helper.initialBlogs) {
-        let user_id = listOfUsers[Math.floor(Math.random()*listOfUsers.length)]
+        //let user_id = listOfUsers[Math.floor(Math.random()*listOfUsers.length)]
+        let user_id = listOfUsers[0]
         let newBlog = new Blog(blog)
         newBlog.user = user_id
         let user = await User.findById(user_id)
@@ -30,13 +36,23 @@ beforeEach(async () => {
         user.blogs = user.blogs.concat(savedBlog._id.toString())
         await user.save()
     }
+
+    const credentials = {
+        username: 'magnus',
+        password: 'password'
+      }
+  
+    const user = await api
+        .post('/api/login')
+        .send(credentials)
+        
+    token = user._body.token
   
 })
 
 describe('Testing the GET call', () => {
     test('api returns the correct number of blogs', async () => {
         const response = await api.get('/api/blogs')
-
         expect(response.body).toHaveLength(helper.initialBlogs.length)
     })
 
@@ -59,9 +75,9 @@ describe('Adding blogs', () => {
         const savedBlog = await api
             .post('/api/blogs')
             .send(newBlog)
+            .set('Authorization', `Bearer ${token}`)
             .expect(201)
 
-        console.log(savedBlog)
         
         expect(savedBlog.body.title).toEqual(newBlog.title)
         expect(savedBlog.body.author).toEqual(newBlog.author)
@@ -82,6 +98,7 @@ describe('Adding blogs', () => {
         const savedBlog = await api
         .post('/api/blogs')
         .send(newBlogNoLikes)
+        .set('Authorization', `Bearer ${token}`)
         .expect(201)
 
         expect(savedBlog.body.likes).toBeDefined
@@ -97,6 +114,7 @@ describe('Adding blogs', () => {
         await api
             .post('/api/blogs')
             .send(newBlogNoTitle)
+            .set('Authorization', `Bearer ${token}`)
             .expect(400)
 
     })
@@ -110,6 +128,7 @@ describe('Adding blogs', () => {
         await api
             .post('/api/blogs')
             .send(newBlogNoUrl)
+            .set('Authorization', `Bearer ${token}`)
             .expect(400)
 
     })
@@ -121,13 +140,16 @@ describe('deleting blogs', () => {
         const blogToDelete = blogs[0].id
         await api
             .delete('/api/blogs/' + blogToDelete)
+            .set('Authorization', `Bearer ${token}`)
             .expect(204)
     })
 
     test('list of blog is one shorter after deleting', async () => {
         const blogs = await helper.blogsInDb()
         const blogToDelete = blogs[0]
-        await api.delete('/api/blogs/' + blogToDelete.id)
+        await api
+            .delete('/api/blogs/' + blogToDelete.id)
+            .set('Authorization', `Bearer ${token}`)
 
         const blogsAfterDelete = await helper.blogsInDb()
         expect (blogsAfterDelete).toHaveLength(blogs.length - 1)
@@ -137,7 +159,9 @@ describe('deleting blogs', () => {
     test('the deleted blog is no longer in the db', async () => {
         const blogs = await helper.blogsInDb()
         const blogToDelete = blogs[0]
-        await api.delete('/api/blogs/' + blogToDelete.id)
+        await api
+            .delete('/api/blogs/' + blogToDelete.id)
+            .set('Authorization', `Bearer ${token}`)
 
         const blogsAfterDelete = await helper.blogsInDb()
 
@@ -157,7 +181,8 @@ describe('deleting blogs', () => {
         }
 
         await api
-            .delete('/api/blogs/' + blogToDelete.id)
+            .delete('/api/blogs/123432142342')
+            .set('Authorization', `Bearer ${token}`)
             .expect(404)
 
         const blogsAfterDelete = await helper.blogsInDb()
@@ -181,9 +206,9 @@ describe('updating blogs', () => {
 
         const updatedBlog = await api.put('/api/blogs/' + blogToUpdate.id)
             .send(updatedFields)
+            .set('Authorization', `Bearer ${token}`)
             .expect(200)
-
-        console.log(updatedBlog.body)
+      
         
         expect(updatedBlog.body.likes).toEqual(updatedFields.likes)
         expect(updatedBlog.body.title).toEqual(updatedFields.title)
@@ -203,6 +228,7 @@ describe('updating blogs', () => {
 
         await api.put('/api/blogs/' + blogToUpdate.id)
             .send(updatedFields)
+            .set('Authorization', `Bearer ${token}`)
             .expect(200)
 
         const blogsAfterUpdate = await helper.blogsInDb()
@@ -220,6 +246,7 @@ describe('updating blogs', () => {
 
         const updatedBlog =  await api.put('/api/blogs/' + blogToUpdate.id)
             .send(updatedFields)
+            .set('Authorization', `Bearer ${token}`)
             .expect(200)
 
         expect (updatedBlog.body.author).toEqual(blogToUpdate.author)
@@ -237,8 +264,8 @@ describe('updating blogs', () => {
 
         await api
             .put('/api/blogs/' + blogToUpdate.id)
+            .set('Authorization', `Bearer ${token}`)
             .expect(404)
-
     })
 
 })

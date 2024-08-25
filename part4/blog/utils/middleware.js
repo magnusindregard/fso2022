@@ -32,7 +32,9 @@ const userExtractor = (request, response, next) => {
   jwt.verify(request.token, process.env.SECRET, async (err, result) => {
     if (err) {
         next(err)
+
     } else {
+        
         request.user = await User.findById(result.id)
         next()
     }
